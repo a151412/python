@@ -17,11 +17,17 @@ from .models import Squad, atividades, FreezingPeriod
 from .serializers import SquadSerializer, AtividadesSerializer, FreezingPeriodSerializer
 
 from django.http import HttpResponse
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.pdfgen import canvas
+from reportlab.lib import colors
 
 import openpyxl
 from django.http import HttpResponse
+from django.shortcuts import render
+from datetime import date
+import calendar
+from .models import atividades, Squad, FreezingPeriod
+from django.db.models import F
 
 
 
@@ -32,15 +38,18 @@ locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
 @login_required
 def calendario(request):
+    # Obter parâmetros da URL
     mes = int(request.GET.get('month', date.today().month))
     ano = int(request.GET.get('year', date.today().year))
+    view_mode = request.GET.get('view', 'calendario')  # 'calendario' ou 'lista'
+
     cal = calendar.monthcalendar(ano, mes)
 
-    eventos = atividades.objects.filter(data__year=ano, data__month=mes).annotate(cor_area=F('area__cor'))
+    # Ordenar eventos por hora
+    eventos = atividades.objects.filter(data__year=ano, data__month=mes).annotate(cor_area=F('area__cor')).order_by('hora')
     areas = Squad.objects.filter(atividades__data__year=ano, atividades__data__month=mes).distinct()
 
     freezing_periods = FreezingPeriod.objects.filter(start_date__year=ano, start_date__month=mes)
-    freezing_days = [day for period in freezing_periods for day in range(period.start_date.day, period.end_date.day + 1)]
 
     context = {
         'cal': cal,
@@ -53,9 +62,74 @@ def calendario(request):
         'proximo_mes': mes + 1 if mes < 12 else 1,
         'ano': ano,
         'freezing_periods': freezing_periods,
+        'view_mode': view_mode  # Passar o modo de visualização para o template
     }
-    print(context)
-    return render(request, 'calendario/calendario.html', context)
+
+    if view_mode == 'lista':
+        return render(request, 'calendario/lista.html', context)
+    else:
+        return render(request, 'calendario/calendario.html', context)
+
+# def calendario(request):
+#     mes = int(request.GET.get('month', date.today().month))
+#     ano = int(request.GET.get('year', date.today().year))
+#     cal = calendar.monthcalendar(ano, mes)
+
+#     eventos = atividades.objects.filter(data__year=ano, data__month=mes).annotate(cor_area=F('area__cor'))
+#     areas = Squad.objects.filter(atividades__data__year=ano, atividades__data__month=mes).distinct()
+
+#     freezing_periods = FreezingPeriod.objects.filter(start_date__year=ano, start_date__month=mes)
+#     freezing_days = [day for period in freezing_periods for day in range(period.start_date.day, period.end_date.day + 1)]
+
+#     context = {
+#         'cal': cal,
+#         'mes_atual': calendar.month_name[mes].capitalize(),
+#         'mes_atual_num': mes,
+#         'ano_atual': ano,
+#         'eventos': eventos,
+#         'areas': areas,
+#         'anterior_mes': mes - 1 if mes > 1 else 12,
+#         'proximo_mes': mes + 1 if mes < 12 else 1,
+#         'ano': ano,
+#         'freezing_periods': freezing_periods,
+#     }
+#     print(context)
+#     return render(request, 'calendario/calendario.html', context)
+
+
+
+# def calendario(request):
+#     # Obter parâmetros da URL
+#     mes = int(request.GET.get('month', date.today().month))
+#     ano = int(request.GET.get('year', date.today().year))
+#     view_mode = request.GET.get('view', 'calendario')  # 'calendario' ou 'lista'
+
+#     cal = calendar.monthcalendar(ano, mes)
+
+#     eventos = atividades.objects.filter(data__year=ano, data__month=mes).annotate(cor_area=F('area__cor'))
+#     areas = Squad.objects.filter(atividades__data__year=ano, atividades__data__month=mes).distinct()
+
+#     freezing_periods = FreezingPeriod.objects.filter(start_date__year=ano, start_date__month=mes)
+
+#     context = {
+#         'cal': cal,
+#         'mes_atual': calendar.month_name[mes].capitalize(),
+#         'mes_atual_num': mes,
+#         'ano_atual': ano,
+#         'eventos': eventos,
+#         'areas': areas,
+#         'anterior_mes': mes - 1 if mes > 1 else 12,
+#         'proximo_mes': mes + 1 if mes < 12 else 1,
+#         'ano': ano,
+#         'freezing_periods': freezing_periods,
+#         'view_mode': view_mode  # Passar o modo de visualização para o template
+#     }
+
+#     if view_mode == 'lista':
+#         return render(request, 'calendario/lista.html', context)
+#     else:
+#         return render(request, 'calendario/calendario.html', context)
+
 
 # Create your views here.
 def home(request):
@@ -242,7 +316,7 @@ def gerar_excel(request):
 
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Relatório de Dados"
+    ws.title = "Relatório das atividades"
 
     # Cabeçalhos da tabela
     ws.append(["Data", "Hora", "Descrição", "Area"])  # Substitua pelos nomes das suas colunas
@@ -262,15 +336,28 @@ def gerar_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="relatorio.pdf"'
 
-    p = canvas.Canvas(response, pagesize=letter)
-    p.drawString(100, 750, "Relatório de Dados")
+    # p = canvas.Canvas(response, pagesize=letter)
+    p = canvas.Canvas(response, pagesize=landscape(letter))
+    # Definir a fonte em negrito e o tamanho
+    p.setFont("Helvetica-Bold", 16)
+
+    # Definir a cor do título (vermelho, por exemplo)
+    p.setFillColorRGB(1, 0, 0)  # Cor RGB (1, 0, 0) é vermelho puro
+
+    # p.drawString(100, 750, "Relatório das Atividades")
+    p.drawString(50, 570, "Relatório das Atividades")
+
+    p.setFont("Courier", 12)
+    p.setFillColor(colors.black)
 
     # Mesma consulta de dados usada na exibição da tabela HTML
     db = atividades.objects.all()
 
     y = 720
+    y = 550
     for dbs in db:
-        p.drawString(100, y, f" {dbs.data}, {dbs.hora}, {dbs.titulo}, | {dbs.area}")  # Substitua pelos campos do seu modelo
+        t = str(dbs.titulo).ljust(30)
+        p.drawString(50, y, f" {dbs.data} | {dbs.hora} | {t} | {dbs.area}")  # Substitua pelos campos do seu modelo
         y -= 20
 
     p.showPage()

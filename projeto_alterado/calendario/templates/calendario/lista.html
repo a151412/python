@@ -1,0 +1,94 @@
+{% extends "calendario/base.html" %}
+
+{% block titulo %}
+<title>Lista de Atividades</title>
+{% endblock %}
+
+{% block content %}
+<div class="col-8 m-auto pt-2 pb-2 text-center">
+    <a href="?month={{ anterior_mes }}&year={{ ano_atual }}&view=lista"
+        class="btn btn-outline-success btn-sm">Anterior</a>
+    <a href="?month={{ proximo_mes }}&year={{ ano_atual }}&view=lista"
+        class="btn btn-outline-success btn-sm">Próximo</a>
+    <a href="?month={{ mes_atual_num }}&year={{ ano_atual }}&view=calendario" class="btn btn-outline-primary btn-sm">Ver
+        Calendário</a>
+    <h2>Atividades de {{ mes_atual }} de {{ ano_atual }}</h2>
+</div>
+
+<div class="d-flex justify-content-center mb-3">
+    <div id="filtros-areas" class="col-8 m-auto pt-2 pb-2">
+        Filtros por área:
+        <div class="checkbox-container">
+            <!-- Checkbox para selecionar todas as áreas -->
+            <div class="checkbox-area" style="display: inline-block; margin-right: 10px;">
+                <input type="checkbox" id="select-all-areas">
+                <label for="select-all-areas">Selecionar Todas</label>
+            </div>
+
+            <!-- Checkboxes individuais para cada área -->
+            {% for area in areas %}
+            <div class="checkbox-area" style="display: inline-block; margin-right: 10px;">
+                <input type="checkbox" id="area_{{ area.id }}" value="{{ area.id }}" checked>
+                <label for="area_{{ area.id }}" style="color: {{ area.cor }}">{{ area.nome }}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th>Hora</th>
+            <th>Título</th>
+            <th>Área</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for atividade in eventos %}
+        <tr class="evento-area-{{ atividade.area.id }}">
+            <td>{{ atividade.data|date:"d/m/Y" }}</td>
+            <td>{{ atividade.hora }}</td>
+            <td>{{ atividade.titulo }}</td>
+            <td style="color: {{ atividade.cor_area }}">{{ atividade.area.nome }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const selectAllCheckbox = document.getElementById('select-all-areas');
+        const checkboxes = document.querySelectorAll('#filtros-areas input[type="checkbox"]:not(#select-all-areas)');
+
+        // Função para selecionar ou desmarcar todos os checkboxes das áreas
+        selectAllCheckbox.addEventListener('change', function () {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+                const areaId = checkbox.value;
+                const eventos = document.querySelectorAll('.evento-area-' + areaId);
+                eventos.forEach(evento => {
+                    evento.style.display = checkbox.checked ? 'table-row' : 'none';
+                });
+            });
+        });
+
+        // Atualiza o checkbox "Selecionar Todas" caso todos os checkboxes individuais sejam desmarcados
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                if (!checkbox.checked) {
+                    selectAllCheckbox.checked = false;
+                } else if (Array.from(checkboxes).every(cb => cb.checked)) {
+                    selectAllCheckbox.checked = true;
+                }
+                const areaId = checkbox.value;
+                const eventos = document.querySelectorAll('.evento-area-' + areaId);
+                eventos.forEach(evento => {
+                    evento.style.display = checkbox.checked ? 'table-row' : 'none';
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
