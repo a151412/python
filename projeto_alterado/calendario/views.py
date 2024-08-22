@@ -29,8 +29,9 @@ import calendar
 from .models import atividades, Squad, FreezingPeriod
 from django.db.models import F
 
-
-
+import pandas as pd
+from django.http import HttpResponse
+from .models import atividades
 
 
 # Definir o local para português do Brasil
@@ -46,7 +47,7 @@ def calendario(request):
     cal = calendar.monthcalendar(ano, mes)
 
     # Ordenar eventos por hora
-    eventos = atividades.objects.filter(data__year=ano, data__month=mes).annotate(cor_area=F('area__cor')).order_by('hora')
+    eventos = atividades.objects.filter(data__year=ano, data__month=mes).annotate(cor_area=F('area__cor')).order_by('data', 'hora')
     areas = Squad.objects.filter(atividades__data__year=ano, atividades__data__month=mes).distinct()
 
     freezing_periods = FreezingPeriod.objects.filter(start_date__year=ano, start_date__month=mes)
@@ -69,67 +70,6 @@ def calendario(request):
         return render(request, 'calendario/lista.html', context)
     else:
         return render(request, 'calendario/calendario.html', context)
-
-# def calendario(request):
-#     mes = int(request.GET.get('month', date.today().month))
-#     ano = int(request.GET.get('year', date.today().year))
-#     cal = calendar.monthcalendar(ano, mes)
-
-#     eventos = atividades.objects.filter(data__year=ano, data__month=mes).annotate(cor_area=F('area__cor'))
-#     areas = Squad.objects.filter(atividades__data__year=ano, atividades__data__month=mes).distinct()
-
-#     freezing_periods = FreezingPeriod.objects.filter(start_date__year=ano, start_date__month=mes)
-#     freezing_days = [day for period in freezing_periods for day in range(period.start_date.day, period.end_date.day + 1)]
-
-#     context = {
-#         'cal': cal,
-#         'mes_atual': calendar.month_name[mes].capitalize(),
-#         'mes_atual_num': mes,
-#         'ano_atual': ano,
-#         'eventos': eventos,
-#         'areas': areas,
-#         'anterior_mes': mes - 1 if mes > 1 else 12,
-#         'proximo_mes': mes + 1 if mes < 12 else 1,
-#         'ano': ano,
-#         'freezing_periods': freezing_periods,
-#     }
-#     print(context)
-#     return render(request, 'calendario/calendario.html', context)
-
-
-
-# def calendario(request):
-#     # Obter parâmetros da URL
-#     mes = int(request.GET.get('month', date.today().month))
-#     ano = int(request.GET.get('year', date.today().year))
-#     view_mode = request.GET.get('view', 'calendario')  # 'calendario' ou 'lista'
-
-#     cal = calendar.monthcalendar(ano, mes)
-
-#     eventos = atividades.objects.filter(data__year=ano, data__month=mes).annotate(cor_area=F('area__cor'))
-#     areas = Squad.objects.filter(atividades__data__year=ano, atividades__data__month=mes).distinct()
-
-#     freezing_periods = FreezingPeriod.objects.filter(start_date__year=ano, start_date__month=mes)
-
-#     context = {
-#         'cal': cal,
-#         'mes_atual': calendar.month_name[mes].capitalize(),
-#         'mes_atual_num': mes,
-#         'ano_atual': ano,
-#         'eventos': eventos,
-#         'areas': areas,
-#         'anterior_mes': mes - 1 if mes > 1 else 12,
-#         'proximo_mes': mes + 1 if mes < 12 else 1,
-#         'ano': ano,
-#         'freezing_periods': freezing_periods,
-#         'view_mode': view_mode  # Passar o modo de visualização para o template
-#     }
-
-#     if view_mode == 'lista':
-#         return render(request, 'calendario/lista.html', context)
-#     else:
-#         return render(request, 'calendario/calendario.html', context)
-
 
 # Create your views here.
 def home(request):
@@ -180,8 +120,6 @@ def create(request):
     print(form)
     return render(request, 'adicionar.html', {'form': form})
 
-
-
 @login_required
 def create_squad(request):
     if request.method == 'POST':
@@ -230,6 +168,7 @@ def listar_atividades_area(request, area_id, mes, ano):
         'area': area,
     }
     return render(request, 'calendario/listar_atividades_area.html', context)
+
 def add_freezing_period(request):
     if request.method == 'POST':
         form = FreezingPeriodForm(request.POST)
@@ -268,7 +207,7 @@ def listar_atividades(request):
     search = request.GET.get('search')
 
     if search:
-        data['db'] = atividades.objects.filter(titulo__icontains=search).order_by('data')
+        data['db'] = atividades.objects.filter(titulo__icontains=search).order_by('data', 'hora')
     else:
         data['db'] = atividades.objects.all().order_by('data')
 
@@ -311,25 +250,37 @@ def delete(request, pk):
     return redirect('listar')
 
 def gerar_excel(request):
+    # Tentar obter o mês e ano da requisição, ou usar valores padrão
+    mes = request.GET.get('month')
+    ano = request.GET.get('year')
+
+    # Verificar se os parâmetros foram passados
+    if not mes or not ano:
+        return HttpResponse("Mês ou ano não foram fornecidos.", content_type="text/plain")
+
+    # Filtrar dados com base no mês e ano fornecidos
+    eventos = atividades.objects.filter(data__year=ano, data__month=mes).values('data', 'hora', 'titulo', 'area__nome')
+    print(eventos)
+
+    # Criar o DataFrame
+    df = pd.DataFrame(list(eventos))
+
+    # Verificar se o DataFrame está vazio
+    if df.empty:
+        return HttpResponse("Nenhum dado disponível para gerar o relatório.", content_type="text/plain")
+
+    # Renomear colunas para uma apresentação melhor no Excel
+    df.columns = ['Data', 'Hora', 'Título', 'Área']
+
+    # Gerar o arquivo Excel
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename=relatorio.xlsx'
+    response['Content-Disposition'] = f'attachment; filename=relatorio_{mes}_{ano}.xlsx'
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Relatório das atividades"
+    # Escrever o DataFrame no arquivo Excel
+    with pd.ExcelWriter(response, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False)
 
-    # Cabeçalhos da tabela
-    ws.append(["Data", "Hora", "Descrição", "Area"])  # Substitua pelos nomes das suas colunas
-
-    # Dados da tabela
-    db = atividades.objects.all()
-    for dbs in db:
-        # ws.append([dbs.titulo, dbs.area])  # Substitua 'campo1' e 'campo2' pelos campos do seu modelo
-        ws.append([str(dbs.data), str(dbs.hora), str(dbs.titulo), str(dbs.area)])
-
-    wb.save(response)
     return response
-
 
 
 def gerar_pdf(request):
@@ -363,9 +314,6 @@ def gerar_pdf(request):
     p.showPage()
     p.save()
     return response
-
-
-
 
 class SquadViewSet(viewsets.ModelViewSet):
     queryset = Squad.objects.all()

@@ -18,14 +18,12 @@
 <div class="d-flex justify-content-center mb-3">
     <div id="filtros-areas" class="col-8 m-auto pt-2 pb-2">
         Filtros por área:
-        <div class="checkbox-container">
-            <!-- Checkbox para selecionar todas as áreas -->
-            <div class="checkbox-area" style="display: inline-block; margin-right: 10px;">
-                <input type="checkbox" id="select-all-areas">
-                <label for="select-all-areas">Selecionar Todas</label>
-            </div>
+        <div class="button-container" style="margin-bottom: 10px;">
+            <button id="enable-all" class="btn btn-success btn-sm">Habilitar Todos</button>
+            <button id="disable-all" class="btn btn-danger btn-sm">Desabilitar Todos</button>
+        </div>
 
-            <!-- Checkboxes individuais para cada área -->
+        <div class="checkbox-container">
             {% for area in areas %}
             <div class="checkbox-area" style="display: inline-block; margin-right: 10px;">
                 <input type="checkbox" id="area_{{ area.id }}" value="{{ area.id }}" checked>
@@ -59,29 +57,37 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', (event) => {
-        const selectAllCheckbox = document.getElementById('select-all-areas');
-        const checkboxes = document.querySelectorAll('#filtros-areas input[type="checkbox"]:not(#select-all-areas)');
+        const enableAllButton = document.getElementById('enable-all');
+        const disableAllButton = document.getElementById('disable-all');
+        const checkboxes = document.querySelectorAll('#filtros-areas input[type="checkbox"]');
 
-        // Função para selecionar ou desmarcar todos os checkboxes das áreas
-        selectAllCheckbox.addEventListener('change', function () {
+        // Função para habilitar todos os checkboxes
+        enableAllButton.addEventListener('click', function () {
             checkboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
+                checkbox.checked = true;
                 const areaId = checkbox.value;
                 const eventos = document.querySelectorAll('.evento-area-' + areaId);
                 eventos.forEach(evento => {
-                    evento.style.display = checkbox.checked ? 'table-row' : 'none';
+                    evento.style.display = 'table-row';
                 });
             });
         });
 
-        // Atualiza o checkbox "Selecionar Todas" caso todos os checkboxes individuais sejam desmarcados
+        // Função para desabilitar todos os checkboxes
+        disableAllButton.addEventListener('click', function () {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                const areaId = checkbox.value;
+                const eventos = document.querySelectorAll('.evento-area-' + areaId);
+                eventos.forEach(evento => {
+                    evento.style.display = 'none';
+                });
+            });
+        });
+
+        // Manter a funcionalidade individual dos checkboxes
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', function () {
-                if (!checkbox.checked) {
-                    selectAllCheckbox.checked = false;
-                } else if (Array.from(checkboxes).every(cb => cb.checked)) {
-                    selectAllCheckbox.checked = true;
-                }
                 const areaId = checkbox.value;
                 const eventos = document.querySelectorAll('.evento-area-' + areaId);
                 eventos.forEach(evento => {
