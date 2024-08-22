@@ -1,0 +1,36 @@
+/* styles.css */
+
+body {
+    background-color: #dfe0e6;
+    /* Cor de fundo cinza claro */
+}
+
+table {
+    width: 100%;
+    margin-bottom: .5em;
+    table-layout: fixed;
+    text-align: center;
+}
+
+td,
+th {
+    padding: .7em;
+    margin: 0;
+    border: 1px solid #ccc;
+    text-align: center;
+    /*   background-color: #EEE;*/
+}
+
+.atividade-count {
+    font-size: 12px;
+    text-align: left;
+    color: rgb(43, 40, 183);
+}
+
+.align-left {
+    text-align: left;
+}
+
+.align-right {
+    text-align: right;
+}

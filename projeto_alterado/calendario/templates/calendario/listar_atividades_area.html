@@ -1,0 +1,27 @@
+{% extends "calendario/base.html" %}
+
+{% block titulo %}
+<title>Atividades da Área</title>
+{% endblock %}
+
+{% block info %}
+<h4>Atividades da Área</h4>
+{% endblock %}
+
+{% block content %}
+<div class="text-center mb-3">
+    <h3>Atividades de {{ area.nome }} para {{ mes_atual }} de {{ ano_atual }}</h3>
+    <a href="{% url 'calendario' %}" class="btn btn-outline-success btn-sm">Voltar ao Calendário</a>
+</div>
+
+<ul class="list-group">
+    {% for atividade in eventos %}
+    <li class="list-group-item">
+        <h5>{{ atividade.titulo }}</h5>
+        <p>{{ atividade.descricao }}</p>
+        <p>Data: {{ atividade.data }}</p>
+        <p>Hora: {{ atividade.hora }}</p>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

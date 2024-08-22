@@ -1,0 +1,74 @@
+
+navegar ate o diretorio do projeto: D:\app020>
+
+instalar pacote para criar ambiente virtual: pip install virtualenv
+
+criar o ambiente virtual:
+
+virtualenv venv
+
+ativar o ambiente virtual:
+
+venv\Scripts\activate
+
+(venv) D:\app020>
+
+instalar pacote do django: pip install django
+
+criar o projeto django
+
+django-admin startproject planejamento .
+
+criar o aplicativo dentro do projeto
+
+python manage.py startapp atividades
+
+configurar o arquivo settings.py na pasta do projeto
+
+incluir o aplicativo 'atividades' na lista de aplicativos INSTALLED_APPS
+
+Crie os Modelos
+
+Defina os modelos Area e Atividade no arquivo models.py na pasta do aplicativo:
+
+Crie e aplique as migrações para criar as tabelas no banco de dados:
+
+python manage.py makemigrations
+python manage.py migrate
+
+Crie os Formulários
+Crie formulários para Area e Atividade no arquivo forms.py
+
+Crie as Views
+Crie views para as operações CRUD no arquivo views.py:
+
+Crie os Templates
+Crie templates para listar, criar, editar e excluir Area e Atividade:
+
+listar_areas.html:
+criar_area.html:
+editar_area.html:
+excluir_area.html:
+
+listar_atividades.html:
+criar_atividade.html:
+editar_atividade.html:
+excluir_atividade.html:
+
+Defina as URLs
+Adicione URLs para as views no arquivo urls.py do aplicativo:
+
+Crie Templates Base
+Crie um template base para as páginas:
+
+base.html:
+
+Execute o Servidor
+Finalmente, execute o servidor para testar o projeto:
+
+python manage.py runserver
+
+
+
+
+

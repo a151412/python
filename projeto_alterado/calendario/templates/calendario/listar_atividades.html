@@ -1,0 +1,66 @@
+{% extends "calendario/base.html" %}
+
+{% block titulo %}
+<title>Calendario</title>
+{% endblock %}
+
+{% block info %}
+<h4>Listagem das Atividades</h4>
+{% endblock %}
+
+{% block content %}
+
+<div>
+    <div class="col-8 m-auto pt-3 pb-2 text-center"></div>
+    <!-- <form method="get">
+        <input type="text" id="search" name="search" class="form-control" placeholder="Buscar em Titulos...">
+    </form> -->
+    <a href="{% url 'gerar_pdf' %}" class="btn btn-primary">Gerar PDF</a>
+    <a href="{% url 'gerar_excel' %}" class="btn btn-success">Gerar Excel</a>
+</div>
+<div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <!-- <th scope="col">#</th>-->
+                <th scope="col">Titulo</th>
+                <th scope="col">Area</th>
+                <th scope="col">Data</th>
+                <th scope="col">Hora</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dbs in db %}
+            <tr>
+                <th>{{dbs.id}}</th>
+                <td>{{dbs.titulo}}</td>
+                <td>{{dbs.area}}</td>
+                <td>{{dbs.data}}</td>
+                <td>{{dbs.hora}}</td>
+                <td>
+                    <a href="/detalhes_atividade/{{dbs.id}}/" class="btn btn-outline-primary btn-sm">Detalhes</a>
+                    <a href="/edit/{{dbs.id}}/" class="btn btn-outline-secondary btn-sm">Editar</a>
+                    <a href="/delete/{{dbs.id}}/" class="btn btn-outline-danger btnDel btn-sm">Deletar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class='col-8 m-auto pt-2 pb-2 text-center'>
+    Paginação:
+    {% if db.has_previous %}
+    <a href="?page={{db.previous_page_number}}" class="btn btn-outline-success btn-sm"> anterior </a>
+    {% endif %}
+    <a class="btn btn-outline-success btn-sm">Atual:{{db.number}}</a>
+    {% if db.has_next %}
+    <a href="?page={{db.next_page_number}}" class="btn btn-outline-success btn-sm"> proxima </a>
+    {% endif %}
+</div>
+
+{% load static %}
+<script src="{% static 'javascript.js' %}">
+</script>
+
+{% endblock %}

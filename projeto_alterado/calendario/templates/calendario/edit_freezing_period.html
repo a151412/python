@@ -1,0 +1,16 @@
+{% extends "calendario/base.html" %}
+
+{% block titulo %}
+<title>Editar Período de Congelamento</title>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Editar Período de Congelamento</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+    </form>
+</div>
+{% endblock %}

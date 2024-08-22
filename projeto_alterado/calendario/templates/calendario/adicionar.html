@@ -1,0 +1,39 @@
+{% extends "calendario/base.html" %}
+
+{% block titulo %}
+<title>Adicionar</title>
+{% endblock %}
+
+{% block info %}
+<h4>Adicionar Atividade</h4>
+{% endblock %}
+
+{% block content %}
+<div class="col-8 m-auto pt-2 pb-2 text-center">
+    <div id="result"></div>
+    <form name="form" id="form" action="{% if db %}/update/{{db.id}}/{%else%}/create/{% endif %}" method="post"
+        class=" custom-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="{{ form.titulo.id_for_label }}" class="align-left">Descrição Resumida:</label>
+            {{ form.titulo }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.descricao.id_for_label }}" class="align-left">Descrição Detalhada:</label>
+            {{ form.descricao }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.area.id_for_label }}" class="align-right">Squad :</label>
+            {{ form.area }}
+            <label for="{{ form.data.id_for_label }}" class="align-right">Data: </label>
+            {{ form.data }}
+            <label for="{{ form.hora.id_for_label }}" class="align-right">Hora: </label>
+            {{ form.hora }}
+        </div>
+        <button type="submit" class="btn btn-outline-success">Adicionar</button>
+    </form>
+</div>
+{% load static %}
+<script src="{% static 'javascript.js' %}"></script>
+
+{% endblock %}

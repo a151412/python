@@ -1,0 +1,150 @@
+{% extends "calendario/base.html" %}
+
+{% block titulo %}
+<title>Calendário</title>
+{% endblock %}
+
+{% block info %}
+<!-- <h4>Calendário</h4> -->
+{% endblock %}
+
+{% block content %}
+<div class="col-8 m-auto pt-2 pb-2 text-center">
+    <a href="?month={{ anterior_mes }}&year={{ ano }}" class="btn btn-outline-success btn-sm">Anterior</a>
+    <a href="?month={{ proximo_mes }}&year={{ ano }}" class="btn btn-outline-success btn-sm">Proximo</a>
+    <h2>{{ mes_atual }} de {{ ano_atual }}</h2>
+</div>
+
+<div class="d-flex justify-content-center mb-3">
+    <div id="filtros-areas" class="col-8 m-auto pt-2 pb-2">
+        Filtros por área:
+        <div class="checkbox-container">
+            <!-- Checkbox para selecionar todas as áreas -->
+            <div class="checkbox-area" style="display: inline-block; margin-right: 10px;">
+                <input type="checkbox" id="select-all-areas">
+                <label for="select-all-areas">Selecionar Todas</label>
+            </div>
+            
+            <!-- Checkboxes individuais para cada área -->
+            {% for area in areas %}
+            <div class="checkbox-area" style="display: inline-block; margin-right: 10px;">
+                <input type="checkbox" id="area_{{ area.id }}" value="{{ area.id }}" checked>
+                <label for="area_{{ area.id }}" style="color: {{ area.cor }}">{{ area.nome }}</label>
+            </div>
+            {% endfor %}
+            </div>
+            </div>
+
+    <div class="text-center mb-3">
+        Listagem por área:
+        <select id="areaSelect" class="form-select" onchange="location = this.value;">
+            <option value="" disabled selected>Selecione a área</option>
+            {% for area in areas %}
+            <option value="{% url 'listar_atividades_area' area.id mes_atual_num ano_atual %}" style="color: {{ area.cor }};">
+                {{ area.nome }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<table class="table table-bordered" style="border-collapse: collapse; width: 100%; table-layout: fixed;">
+    <thead>
+        <tr>
+            <th style="border: 1px solid #141414; text-align: center;">Segunda</th>
+            <th style="border: 1px solid #141414; text-align: center;">Terça</th>
+            <th style="border: 1px solid #141414; text-align: center;">Quarta</th>
+            <th style="border: 1px solid #141414; text-align: center;">Quinta</th>
+            <th style="border: 1px solid #141414; text-align: center;">Sexta</th>
+            <th style="border: 1px solid #141414; text-align: center;">Sábado</th>
+            <th style="border: 1px solid #141414; text-align: center;">Domingo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for semana in cal %}
+        <tr>
+            {% for dia in semana %}
+            {% if dia == 0 %}
+            <td style="border: 1px solid #141414; text-align: center;"></td>
+            {% else %}
+            <td id="day-{{ dia }}" style="border: 1px solid #141414; text-align: center; vertical-align: top; padding: 5px;">
+                <span style="display: block; font-weight: bold;">{{ dia }}</span>
+                <ul class="atividade-count" style="list-style: disc; padding-left: 20px; margin: 0;">
+                    {% for atividade in eventos %}
+                    {% if atividade.data.day == dia %}
+                    <li class="evento-area-{{ atividade.area.id }}" style="color: {{ atividade.cor_area }}">
+                        {{ atividade.hora }} - {{ atividade.titulo }}</li>
+                    {% endif %}
+                    {% endfor %}
+                </ul>
+            </td>
+            {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const selectAllCheckbox = document.getElementById('select-all-areas');
+        const checkboxes = document.querySelectorAll('#filtros-areas input[type="checkbox"]:not(#select-all-areas)');
+
+        // Função para selecionar ou desmarcar todos os checkboxes das áreas
+        selectAllCheckbox.addEventListener('change', function () {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+                const areaId = checkbox.value;
+                const eventos = document.querySelectorAll('.evento-area-' + areaId);
+                eventos.forEach(evento => {
+                    evento.style.display = checkbox.checked ? 'list-item' : 'none';
+                });
+            });
+        });
+
+        // Atualiza o checkbox "Selecionar Todas" caso todos os checkboxes individuais sejam desmarcados
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                if (!checkbox.checked) {
+                    selectAllCheckbox.checked = false;
+                } else if (Array.from(checkboxes).every(cb => cb.checked)) {
+                    selectAllCheckbox.checked = true;
+                }
+                const areaId = checkbox.value;
+                const eventos = document.querySelectorAll('.evento-area-' + areaId);
+                eventos.forEach(evento => {
+                    evento.style.display = checkbox.checked ? 'list-item' : 'none';
+                });
+            });
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var freezingPeriods = [
+            {% for period in freezing_periods %}
+            {
+            start_date: new Date("{{ period.start_date|date:'Y-m-d' }}T00:00:00"),
+            end_date: new Date("{{ period.end_date|date:'Y-m-d' }}T00:00:00"),
+            color: "{{ period.color }}"
+        },
+        {% endfor %}
+        ];
+
+    freezingPeriods.forEach(function (period) {
+        var startDate = new Date(period.start_date);
+        var endDate = new Date(period.end_date);
+        var color = period.color;
+
+        for (var d = new Date(startDate.getTime()); d <= endDate; d.setUTCDate(d.getUTCDate() + 1)) {
+            var dayId = 'day-' + d.getUTCDate();
+            var dayCell = document.getElementById(dayId);
+            if (dayCell) {
+                dayCell.style.backgroundColor = color;
+            }
+        }
+    });
+    });
+</script>
+{% endblock %}

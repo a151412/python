@@ -1,0 +1,41 @@
+{% extends "calendario/base.html" %}
+
+{% block titulo %}
+<title>Squads</title>
+{% endblock %}
+
+{% block info %}
+<h4>Listagem das Squads</h4>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <!-- <h2>Lista de Squads</h2> -->
+        <a href="{% url 'create_squad' %}" class="btn btn-success">Adicionar Squad</a>
+    </div>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Cor</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for squad in squads %}
+            <tr>
+                <td>{{ squad.id }}</td>
+                <td>{{ squad.nome }}</td>
+                <td><span style="background-color: {{ squad.cor }};">{{ squad.cor }}</span></td>
+                <td>
+                    <a href="{% url 'edit_squad' squad.id %}" class="btn btn-warning btn-sm">Editar</a>
+                    <a href="{% url 'delete_squad' squad.id %}" class="btn btn-danger btn-sm">Excluir</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

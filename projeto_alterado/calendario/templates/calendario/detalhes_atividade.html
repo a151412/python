@@ -1,0 +1,26 @@
+{% extends "calendario/base.html" %}
+
+{% block titulo %}
+<title>Detalhes ajustada</title>
+{% endblock %}
+
+{% block corpo %}
+<hr>
+<hr>
+<div class="col-8 m-auto pt-2 pb-2 ">
+    <strong>Titulo : </strong>{{db.titulo}}<br><br>
+    <strong>Descrição : </strong>{{db.descricao}}<br><br>
+    <strong>Data : </strong>{{db.data}}<br>
+    <strong>Hora : </strong>{{db.hora}}<br>
+    <strong>Area : </strong>{{db.area}}<br>
+</div>
+
+<div class="col-8 m-auto pt-2 pb-2 ">
+    <a href="/listar_atividades" class="btn btn-info btn-sm">Voltar</a>
+</div>
+
+{% endblock %}
+
+</body>
+
+</html>
