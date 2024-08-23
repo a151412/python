@@ -33,6 +33,11 @@ import pandas as pd
 from django.http import HttpResponse
 from .models import atividades
 
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+
+
+
 
 # Definir o local para português do Brasil
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
@@ -132,11 +137,6 @@ def create_squad(request):
     return render(request, 'calendario/create_squad.html', {'form': form})
 
 @login_required
-def list_squads(request):
-    squads = Squad.objects.all()
-    return render(request, 'calendario/list_squads.html', {'squads': squads})
-
-@login_required
 def edit_squad(request, id):
     squad = get_object_or_404(Squad, id=id)
     if request.method == 'POST':
@@ -155,19 +155,6 @@ def delete_squad(request, id):
         squad.delete()
         return redirect('list_squads')
     return render(request, 'calendario/delete_squad.html', {'squad': squad})
-
-@login_required
-def listar_atividades_area(request, area_id, mes, ano):
-    eventos = atividades.objects.filter(data__year=ano, data__month=mes, area_id=area_id)
-    area = Squad.objects.get(id=area_id)
-
-    context = {
-        'eventos': eventos,
-        'mes_atual': calendar.month_name[mes],
-        'ano_atual': ano,
-        'area': area,
-    }
-    return render(request, 'calendario/listar_atividades_area.html', context)
 
 def add_freezing_period(request):
     if request.method == 'POST':
@@ -190,9 +177,6 @@ def edit_freezing_period(request, pk):
         form = FreezingPeriodForm(instance=freezing_period)
     return render(request, 'calendario/edit_freezing_period.html', {'form': form})
 
-def list_freezing_periods(request):
-    freezing_periods = FreezingPeriod.objects.all()
-    return render(request, 'calendario/list_freezing_periods.html', {'freezing_periods': freezing_periods})
 
 def delete_freezing_period(request, pk):
     freezing_period = get_object_or_404(FreezingPeriod, pk=pk)
@@ -200,24 +184,6 @@ def delete_freezing_period(request, pk):
         freezing_period.delete()
         return redirect('list_freezing_periods')
     return render(request, 'calendario/delete_freezing_period.html', {'freezing_period': freezing_period})
-
-@login_required
-def listar_atividades(request):
-    data = {}
-    search = request.GET.get('search')
-
-    if search:
-        data['db'] = atividades.objects.filter(titulo__icontains=search).order_by('data', 'hora')
-    else:
-        data['db'] = atividades.objects.all().order_by('data')
-
-    all = data['db']
-
-    paginator = Paginator(all, 8)
-    pages = request.GET.get('page')
-
-    data['db'] = paginator.get_page(pages)
-    return render(request, 'calendario/listar_atividades.html', data)
 
 @login_required
 def detalhes_atividade(request, pk):
@@ -249,12 +215,8 @@ def delete(request, pk):
     db.delete()
     return redirect('listar')
 
-def gerar_excel(request):
-    # Tentar obter o mês e ano da requisição, ou usar valores padrão
-    mes = request.GET.get('month')
-    ano = request.GET.get('year')
+def gerar_excel(request,mes, ano):
 
-    # Verificar se os parâmetros foram passados
     if not mes or not ano:
         return HttpResponse("Mês ou ano não foram fornecidos.", content_type="text/plain")
 
@@ -284,36 +246,42 @@ def gerar_excel(request):
 
 
 def gerar_pdf(request):
+    mes = 6
+    ano = 2024
+
+    # Filtrar dados e criar DataFrame
+    eventos = atividades.objects.filter(data__year=ano, data__month=mes).values('data', 'hora', 'titulo', 'area__nome')
+    df = pd.DataFrame(list(eventos))
+    print(df)
+
+    # Verificar se o DataFrame está vazio
+    if df.empty:
+        return HttpResponse("Nenhum dado disponível para gerar o relatório.", content_type="text/plain")
+
+    # Converter DataFrame para HTML
+    df.columns = ['Data', 'Hora', 'Título', 'Área']
+    html_table = df.to_html(index=False)
+
+    # Criar um contexto para o template
+    context = {
+        'mes': mes,
+        'ano': ano,
+        'tabela': html_table,
+    }
+
+    # Renderizar o template HTML com a tabela
+    html = render_to_string('calendario/relatorio_template.html', context)
+
+    # Converter o HTML para PDF usando xhtml2pdf
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="relatorio.pdf"'
+    response['Content-Disposition'] = 'attachment; filename=relatorio.pdf'
 
-    # p = canvas.Canvas(response, pagesize=letter)
-    p = canvas.Canvas(response, pagesize=landscape(letter))
-    # Definir a fonte em negrito e o tamanho
-    p.setFont("Helvetica-Bold", 16)
+    pisa_status = pisa.CreatePDF(html, dest=response)
 
-    # Definir a cor do título (vermelho, por exemplo)
-    p.setFillColorRGB(1, 0, 0)  # Cor RGB (1, 0, 0) é vermelho puro
-
-    # p.drawString(100, 750, "Relatório das Atividades")
-    p.drawString(50, 570, "Relatório das Atividades")
-
-    p.setFont("Courier", 12)
-    p.setFillColor(colors.black)
-
-    # Mesma consulta de dados usada na exibição da tabela HTML
-    db = atividades.objects.all()
-
-    y = 720
-    y = 550
-    for dbs in db:
-        t = str(dbs.titulo).ljust(30)
-        p.drawString(50, y, f" {dbs.data} | {dbs.hora} | {t} | {dbs.area}")  # Substitua pelos campos do seu modelo
-        y -= 20
-
-    p.showPage()
-    p.save()
+    if pisa_status.err:
+        return HttpResponse('Erro ao gerar PDF', content_type='text/plain')
     return response
+
 
 class SquadViewSet(viewsets.ModelViewSet):
     queryset = Squad.objects.all()
@@ -326,5 +294,49 @@ class AtividadesViewSet(viewsets.ModelViewSet):
 class FreezingPeriodViewSet(viewsets.ModelViewSet):
     queryset = FreezingPeriod.objects.all()
     serializer_class = FreezingPeriodSerializer
+
+# opções de listagem.
+@login_required
+def listar_atividades(request):
+    data = {}
+    search = request.GET.get('search')
+
+    if search:
+        data['db'] = atividades.objects.filter(titulo__icontains=search).order_by('data', 'hora')
+    else:
+        data['db'] = atividades.objects.all().order_by('data')
+
+    all = data['db']
+
+    paginator = Paginator(all, 8)
+    pages = request.GET.get('page')
+
+    data['db'] = paginator.get_page(pages)
+
+    return render(request, 'calendario/listar_atividades.html', data)
+
+@login_required
+def list_squads(request):
+    squads = Squad.objects.all()
+    return render(request, 'calendario/list_squads.html', {'squads': squads})
+
+@login_required
+def list_freezing_periods(request):
+    freezing_periods = FreezingPeriod.objects.all()
+    return render(request, 'calendario/list_freezing_periods.html', {'freezing_periods': freezing_periods})
+
+@login_required
+def listar_atividades_area(request, area_id, mes, ano):
+    eventos = atividades.objects.filter(data__year=ano, data__month=mes, area_id=area_id)
+    area = Squad.objects.get(id=area_id)
+
+    context = {
+        'eventos': eventos,
+        'mes_atual': calendar.month_name[mes],
+        'ano_atual': ano,
+        'area': area,
+    }
+    return render(request, 'calendario/listar_atividades_area.html', context)
+
 
 

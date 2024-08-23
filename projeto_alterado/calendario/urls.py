@@ -14,16 +14,16 @@ router.register(r'atividades', AtividadesViewSet)
 router.register(r'freezing-periods', FreezingPeriodViewSet)
 
 urlpatterns = [
+    path('calendario/', calendario, name='calendario'),
     path('', home, name='home'),
     path('gerar-pdf/', gerar_pdf, name='gerar_pdf'),
-    path('gerar-excel/', gerar_excel, name='gerar_excel'),
+    path('gerar-excel/<int:mes>/<int:ano>/', gerar_excel, name='gerar_excel'),
     path('api/', include(router.urls)),
     path('adicionar/', adicionar, name='adicionar'),
     path('listar_atividades/', listar_atividades, name='listar_atividades'),
     path('products/', products, name='products'),
     path('register/', register, name='register'),
     path('logout/', exit, name='exit'),
-    path('calendario/', calendario, name='calendario'),
     path('create/', create, name='create'),
     path('update/<int:pk>/', update, name='update'),
     path('delete/<int:pk>/', delete, name='delete'),
