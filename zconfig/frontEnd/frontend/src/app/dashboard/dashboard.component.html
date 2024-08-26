@@ -1,0 +1,28 @@
+<div>
+    <h2>Últimas Configurações de Todos os CeCs</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>CeC</th>
+                <th>Data</th>
+                <th>Memória</th>
+                <th>MIPS</th>
+                <th>Observação</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let config of configuracoes">
+                <td>{{ config.cec }}</td>
+                <td>{{ config.data }}</td>
+                <td>{{ config.memoria }}</td>
+                <td>{{ config.mips }}</td>
+                <td>{{ config.observacao }}</td>
+                <td>
+                    <button (click)="onSelectCeC(config.cec)">Nova Configuração</button>
+                    <button (click)="deleteConfiguracao(config.id)">Excluir</button> <!-- Botão de exclusão -->
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

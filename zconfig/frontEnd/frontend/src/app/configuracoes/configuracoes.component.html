@@ -1,0 +1,14 @@
+<div>
+    <h2>Última Configuração</h2>
+    <label for="cec">CeC:</label>
+    <input id="cec" [(ngModel)]="cec" (blur)="getLastConfiguracao()" />
+
+    <div *ngIf="configuracao">
+        <p>Data: {{ configuracao.data }}</p>
+        <p>Memória: {{ configuracao.memoria }}</p>
+        <p>MIPS: {{ configuracao.mips }}</p>
+        <p>Observação: {{ configuracao.observacao }}</p>
+
+        <button (click)="saveNewConfiguracao()">Salvar Nova Configuração</button>
+    </div>
+</div>

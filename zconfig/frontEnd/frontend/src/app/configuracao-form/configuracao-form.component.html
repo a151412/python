@@ -1,0 +1,16 @@
+<div>
+    <h2>Nova Configuração para CeC: {{ cec }}</h2>
+
+    <div *ngIf="configuracao">
+        <label for="memoria">Memória:</label>
+        <input id="memoria" [(ngModel)]="configuracao.memoria" />
+
+        <label for="mips">MIPS:</label>
+        <input id="mips" [(ngModel)]="configuracao.mips" />
+
+        <label for="observacao">Observação:</label>
+        <input id="observacao" [(ngModel)]="configuracao.observacao" />
+
+        <button (click)="saveNewConfiguracao()">Salvar Nova Configuração</button>
+    </div>
+</div>
