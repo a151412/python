@@ -1,0 +1,35 @@
+comando para iniciar o backend:   uvicorn app.main:app --reload
+
+curl -X POST "http://127.0.0.1:8000/configuracoes/" -H "Content-Type: application/json" -d "{\"data\":\"2024-07-25\", \"cec\":\"CDF88235\", \"memoria\":1512, \"mips\":2550, \"observacao\":\"Teste de inserção\"}"
+
+curl -X GET http://127.0.0.1:8000/configuracoes/latest
+
+curl -X GET http://127.0.0.1:8000/configuracoes/
+
+pip freeze > requirements.txt
+
+pip install -r requirements.txt
+
+http://127.0.0.1:8000/docs
+
+
+
+### **3. Ferramentas Adicionais**
+
+- **Compodoc**: Para o Angular, você pode usar o [Compodoc](https://compodoc.app/) para gerar documentação automatizada a partir do seu código.
+  - Instale o Compodoc:
+    ```bash
+    npm install -g @compodoc/compodoc
+    ```
+  - Gere a documentação:
+    ```bash
+    compodoc -p tsconfig.app.json
+    ```
+  - Acesse a documentação gerada:
+    ```bash
+    compodoc -s
+    ```
+
+### **Conclusão**
+
+Com essas etapas, você terá uma documentação detalhada tanto para o backend quanto para o frontend, o que não só ajudará na compreensão do que foi feito, mas também servirá como referência para futuras manutenções e aprendizado. Se precisar de mais alguma coisa, estou à disposição!
