@@ -1,0 +1,16 @@
+
+/* 
+ * Este arquivo define os estilos globais para a aplicação Angular.
+ * Os estilos aqui definidos serão aplicados a toda a aplicação.
+ */
+
+/* Define a altura do html e body para 100%, garantindo que eles preencham a tela inteira */
+html, body { 
+    height: 100%; 
+}
+
+/* Remove a margem padrão do body e define a fonte padrão da aplicação para Roboto */
+body { 
+    margin: 0; 
+    font-family: Roboto, "Helvetica Neue", sans-serif; 
+}
