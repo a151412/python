@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 export class DashboardComponent implements OnInit {
 
   configuracoes: any[] = [];
+  displayedColumns: string[] = ['cec', 'data', 'memoria', 'mips', 'observacao', 'acoes'];
 
   constructor(private configuracoesService: ConfiguracoesService, private router: Router) { }
 
@@ -28,9 +29,9 @@ export class DashboardComponent implements OnInit {
   }
 
   deleteConfiguracao(id: number): void {
-    if (confirm("Tem certeza que deseja excluir esta configuração?")) {  // Confirmação antes de excluir
+    if (confirm("Tem certeza que deseja excluir esta configuração?")) {
       this.configuracoesService.deleteConfiguracao(id).subscribe(() => {
-        this.getAllLatestConfiguracoes();  // Atualiza a lista após exclusão
+        this.getAllLatestConfiguracoes();
       });
     }
   }
